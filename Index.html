@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Very Important Question 💌</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lato:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --rose: #e8405a;
+    --blush: #fde8ec;
+    --cream: #fff9f5;
+    --gold: #c9963c;
+    --dark: #1a0a10;
+    --mid: #7a3848;
+  }
+
+  body {
+    background: var(--cream);
+    font-family: 'Lato', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    cursor: default;
+  }
+
+  /* ── FLOATING HEARTS BACKGROUND ── */
+  .hearts-bg {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+  }
+  .heart-particle {
+    position: absolute; font-size: 1.4rem; opacity: 0;
+    animation: floatHeart linear infinite;
+  }
+  @keyframes floatHeart {
+    0%   { transform: translateY(110vh) rotate(-15deg); opacity: 0; }
+    10%  { opacity: 0.35; }
+    90%  { opacity: 0.2; }
+    100% { transform: translateY(-10vh) rotate(15deg); opacity: 0; }
+  }
+
+  /* ── SCREENS ── */
+  .screen {
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 2rem 1.5rem; position: relative; z-index: 1;
+    animation: fadeIn 0.7s ease;
+  }
+  .screen.active { display: flex; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+
+  /* ── CARD ── */
+  .card {
+    background: white;
+    border-radius: 28px;
+    padding: 2.8rem 2.4rem;
+    max-width: 520px; width: 100%;
+    box-shadow: 0 12px 60px rgba(232,64,90,0.13), 0 2px 8px rgba(0,0,0,0.06);
+    text-align: center;
+    position: relative;
+  }
+  .card::before {
+    content: '';
+    position: absolute; inset: 0; border-radius: 28px;
+    border: 2px solid transparent;
+    background: linear-gradient(135deg, #f9c6cf, #fde8ec, #c9963c33) border-box;
+    -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: destination-out; mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* ── TYPOGRAPHY ── */
+  h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.9rem, 5vw, 2.8rem);
+    color: var(--dark);
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+  }
+  h1 em { color: var(--rose); font-style: italic; }
+  .subtitle {
+    font-size: 1rem; color: var(--mid); font-weight: 300;
+    margin-bottom: 1.8rem; letter-spacing: 0.03em;
+  }
+
+  /* ── IMAGES STRIP ── */
+  .img-strip {
+    display: flex; gap: 10px; justify-content: center; margin-bottom: 1.8rem; flex-wrap: wrap;
+  }
+  .img-strip .emoji-frame {
+    width: 72px; height: 72px; border-radius: 16px;
+    background: var(--blush); font-size: 2.4rem;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 3px 12px rgba(232,64,90,0.15);
+    animation: pulse 3s ease-in-out infinite;
+  }
+  .img-strip .emoji-frame:nth-child(2) { animation-delay: 0.4s; }
+  .img-strip .emoji-frame:nth-child(3) { animation-delay: 0.8s; }
+  .img-strip .emoji-frame:nth-child(4) { animation-delay: 1.2s; }
+  @keyframes pulse {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+
+  /* ── BUTTONS ── */
+  .btn-group { display: flex; gap: 1rem; justify-content: center; align-items: center; margin-top: 1.6rem; position: relative; min-height: 56px; }
+  .btn {
+    padding: 0.85rem 2.2rem; border-radius: 50px; border: none;
+    font-family: 'Lato', sans-serif; font-size: 1rem; font-weight: 400;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-yes {
+    background: linear-gradient(135deg, var(--rose), #c42d47);
+    color: white; box-shadow: 0 4px 18px rgba(232,64,90,0.4);
+    letter-spacing: 0.05em;
+  }
+  .btn-yes:hover { transform: translateY(-2px) scale(1.04); box-shadow: 0 8px 28px rgba(232,64,90,0.45); }
+  .btn-no {
+    background: var(--blush); color: var(--mid);
+    position: fixed; transition: left 0.12s cubic-bezier(0.22,1,0.36,1), top 0.12s cubic-bezier(0.22,1,0.36,1);
+    z-index: 10; cursor: not-allowed;
+  }
+
+  /* ── TOAST ── */
+  .toast {
+    display: none;
+    position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
+    background: var(--dark); color: white; padding: 1rem 1.8rem;
+    border-radius: 14px; font-size: 0.95rem; z-index: 9998;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+    max-width: 320px; text-align: center; line-height: 1.45;
+  }
+  .toast.show { display: block; }
+
+  /* ── YES SCREEN ── */
+  .hurray-emoji { font-size: 4rem; margin-bottom: 0.6rem; display: block;
+    animation: bounce 0.8s ease infinite alternate; }
+  @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-12px); } }
+  .confetti-row { font-size: 1.6rem; margin-bottom: 1rem; letter-spacing: 0.2em; }
+
+  /* ── STEPS ── */
+  .step { display: none; }
+  .step.active { display: block; animation: fadeIn 0.5s ease; }
+  .step-label {
+    font-family: 'Playfair Display', serif; font-size: 1.2rem;
+    color: var(--dark); margin-bottom: 1.2rem; font-style: italic;
+  }
+
+  /* ── CALENDAR ── */
+  .date-time-row { display: flex; gap: 0.8rem; flex-wrap: wrap; justify-content: center; }
+  input[type="date"], input[type="time"] {
+    padding: 0.75rem 1.2rem; border: 1.5px solid #f0c5cc; border-radius: 12px;
+    font-family: 'Lato', sans-serif; font-size: 1rem; color: var(--dark);
+    background: var(--blush); outline: none; flex: 1; min-width: 140px;
+    transition: border-color 0.2s;
+  }
+  input[type="date"]:focus, input[type="time"]:focus { border-color: var(--rose); }
+
+  /* ── FOOD OPTIONS ── */
+  .food-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    gap: 0.8rem; margin-bottom: 1.4rem;
+  }
+  .food-chip {
+    background: var(--blush); border: 2px solid transparent; border-radius: 14px;
+    padding: 0.7rem 0.4rem; cursor: pointer; transition: all 0.18s;
+    font-size: 0.85rem; color: var(--mid); text-align: center; user-select: none;
+  }
+  .food-chip .food-emoji { font-size: 1.8rem; display: block; margin-bottom: 0.3rem; }
+  .food-chip.selected { border-color: var(--rose); background: #fde0e6; color: var(--dark); }
+  .food-chip:hover { transform: scale(1.04); }
+
+  /* ── NEXT BUTTON ── */
+  .btn-next {
+    margin-top: 1.2rem; width: 100%;
+    background: linear-gradient(135deg, var(--rose), #c42d47);
+    color: white; padding: 0.9rem; border-radius: 14px;
+    border: none; font-size: 1rem; cursor: pointer;
+    font-family: 'Lato', sans-serif; letter-spacing: 0.06em;
+    transition: all 0.2s; box-shadow: 0 4px 18px rgba(232,64,90,0.35);
+  }
+  .btn-next:hover { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(232,64,90,0.4); }
+
+  /* ── FINAL SCREEN ── */
+  .final-card { text-align: center; }
+  .final-card .big-emoji { font-size: 4.5rem; display: block; margin-bottom: 1rem; }
+  .final-card h1 { margin-bottom: 0.8rem; }
+  .final-detail { background: var(--blush); border-radius: 14px; padding: 1.1rem 1.4rem; margin-top: 1.4rem; font-size: 0.97rem; color: var(--mid); line-height: 1.7; }
+  .final-detail strong { color: var(--rose); }
+
+  /* ── PROGRESS DOTS ── */
+  .progress-dots { display: flex; gap: 6px; justify-content: center; margin-bottom: 1.4rem; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #f0c5cc; transition: background 0.3s; }
+  .dot.active { background: var(--rose); }
+
+  /* ── OWNER PANEL ── */
+  #owner-panel {
+    display: none; position: fixed; top: 0; right: 0; bottom: 0;
+    width: min(380px, 100vw); background: white;
+    box-shadow: -8px 0 40px rgba(0,0,0,0.12); z-index: 9999;
+    flex-direction: column; padding: 2rem 1.8rem; overflow-y: auto;
+    animation: slideIn 0.35s ease;
+  }
+  @keyframes slideIn { from { transform: translateX(100%); } to { transform: none; } }
+  #owner-panel.show { display: flex; }
+  #owner-panel h2 { font-family: 'Playfair Display', serif; color: var(--dark); margin-bottom: 1.2rem; }
+  .response-block { background: var(--blush); border-radius: 14px; padding: 1.1rem; margin-bottom: 1rem; font-size: 0.9rem; color: var(--mid); line-height: 1.6; }
+  .response-block strong { color: var(--rose); }
+  .no-responses { color: #aaa; font-style: italic; margin-top: 2rem; }
+  .close-panel { position: absolute; top: 1.2rem; right: 1.4rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--mid); }
+
+  /* ── SECRET OWNER BUTTON (bottom-right corner) ── */
+  #owner-btn {
+    position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 500;
+    background: var(--dark); color: #ffffff44; border: none;
+    width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+    font-size: 0.7rem; transition: color 0.3s;
+  }
+  #owner-btn:hover { color: white; }
+
+  @media (max-width: 500px) {
+    .card { padding: 2rem 1.4rem; }
+    h1 { font-size: 1.7rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Floating hearts -->
+<div class="hearts-bg" id="heartsBg"></div>
+
+<!-- ════════════════════════════════
+     SCREEN 1 — THE QUESTION
+════════════════════════════════ -->
+<div class="screen active" id="screen-question">
+  <div class="card">
+    <div class="img-strip">
+      <div class="emoji-frame">🌹</div>
+      <div class="emoji-frame">✨</div>
+      <div class="emoji-frame">🥂</div>
+      <div class="emoji-frame">🌙</div>
+    </div>
+    <h1>Will you go on a<br><em>date</em> with me?</h1>
+    <p class="subtitle">This might be the most important question I ever ask&nbsp;🥺</p>
+
+    <div class="btn-group" id="btnGroup">
+      <button class="btn btn-yes" onclick="sayYes()">Yes! 💕</button>
+    </div>
+    <!-- No button lives outside card so it can roam the whole screen -->
+    <button class="btn btn-no" id="btnNo" onclick="noClick()">No</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     SCREEN 2 — YES FLOW
+════════════════════════════════ -->
+<div class="screen" id="screen-yes">
+  <div class="card">
+    <div class="confetti-row">🎉🎊🎉</div>
+    <span class="hurray-emoji">🥳</span>
+    <h1>Hurray! I couldn't<br>be <em>happier</em>!</h1>
+    <p class="subtitle">Now let's plan something perfect for us 💌</p>
+
+    <div class="progress-dots" id="progressDots">
+      <div class="dot active" id="dot-0"></div>
+      <div class="dot" id="dot-1"></div>
+      <div class="dot" id="dot-2"></div>
+    </div>
+
+    <!-- Step 1 — Date & Time -->
+    <div class="step active" id="step-0">
+      <p class="step-label">When would you be available?</p>
+      <div class="date-time-row">
+        <input type="date" id="dateInput">
+        <input type="time" id="timeInput" value="19:00">
+      </div>
+      <button class="btn-next" onclick="nextStep(1)">Next →</button>
+    </div>
+
+    <!-- Step 2 — Food -->
+    <div class="step" id="step-1">
+      <p class="step-label">What would you like to have?</p>
+      <div class="food-grid" id="foodGrid">
+        <!-- chips generated by JS -->
+      </div>
+      <button class="btn-next" onclick="nextStep(2)">Next →</button>
+    </div>
+
+    <!-- Step 3 — Final message -->
+    <div class="step" id="step-2">
+      <div class="final-card">
+        <span class="big-emoji">💖</span>
+        <h1>Glad you said <em>yes</em>!</h1>
+        <p class="subtitle">Get ready — this is going to be a night to remember.</p>
+        <div class="final-detail" id="finalDetail"></div>
+        <button class="btn-next" style="margin-top:1.4rem" onclick="submitResponse()">Send ✨</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════
+     SCREEN 3 — ALL DONE
+════════════════════════════════ -->
+<div class="screen" id="screen-done">
+  <div class="card">
+    <span class="big-emoji" style="font-size:4rem;display:block;margin-bottom:1rem;">🌹</span>
+    <h1>It's a <em>date</em>!</h1>
+    <p class="subtitle">Can't wait to see you. Until then, counting down every second 💫</p>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Owner Panel -->
+<div id="owner-panel">
+  <button class="close-panel" onclick="closeOwner()">✕</button>
+  <h2>💌 Her Response</h2>
+  <div id="responseContent"></div>
+</div>
+
+<!-- Secret owner trigger -->
+<button id="owner-btn" onclick="openOwner()" title="View response">👤</button>
+
+<script>
+// ── TOAST (declared first so all functions can use it) ────
+let toastTimer = null;
+function showToast(msg, duration = 3200) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(dismissToast, duration);
+}
+function dismissToast() {
+  clearTimeout(toastTimer);
+  toastTimer = null;
+  document.getElementById('toast').classList.remove('show');
+}
+
+// ── CONFIG ──────────────────────────────────────────────
+const FOODS = [
+  { emoji:'🍕', label:'Pizza' },
+  { emoji:'☕', label:'Coffee' },
+  { emoji:'🍝', label:'Pasta' },
+  { emoji:'🍣', label:'Sushi' },
+  { emoji:'🍷', label:'Wine' },
+  { emoji:'🍰', label:'Dessert' },
+  { emoji:'🥗', label:'Salad' },
+  { emoji:'🍔', label:'Burger' },
+  { emoji:'🧁', label:'Cupcakes' },
+  { emoji:'🫖', label:'Tea' },
+];
+
+// ── FLOATING HEARTS ──────────────────────────────────────
+(function initHearts() {
+  const bg = document.getElementById('heartsBg');
+  const emojis = ['❤️','🌸','✨','💕','🌹','💫','🥀'];
+  for (let i = 0; i < 22; i++) {
+    const el = document.createElement('span');
+    el.className = 'heart-particle';
+    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    el.style.left = Math.random() * 100 + 'vw';
+    el.style.animationDuration = (12 + Math.random() * 14) + 's';
+    el.style.animationDelay = (Math.random() * 15) + 's';
+    el.style.fontSize = (0.9 + Math.random() * 1.4) + 'rem';
+    bg.appendChild(el);
+  }
+})();
+
+// ── FOOD CHIPS ────────────────────────────────────────────
+const selectedFoods = new Set();
+(function buildFoods() {
+  const grid = document.getElementById('foodGrid');
+  FOODS.forEach(f => {
+    const chip = document.createElement('div');
+    chip.className = 'food-chip';
+    chip.innerHTML = `<span class="food-emoji">${f.emoji}</span>${f.label}`;
+    chip.onclick = () => {
+      chip.classList.toggle('selected');
+      selectedFoods.has(f.label) ? selectedFoods.delete(f.label) : selectedFoods.add(f.label);
+    };
+    grid.appendChild(chip);
+  });
+})();
+
+// ── NO BUTTON LOGIC ───────────────────────────────────────
+let noAttempts = 0;
+const btn = document.getElementById('btnNo');
+
+// Place it initially next to the Yes button area
+function initNoBtn() {
+  const rect = document.querySelector('.btn-yes').getBoundingClientRect();
+  btn.style.left = (rect.right + 20) + 'px';
+  btn.style.top  = rect.top + 'px';
+}
+window.addEventListener('load', initNoBtn);
+window.addEventListener('resize', initNoBtn);
+
+function getRandomPos() {
+  const w = btn.offsetWidth  || 80;
+  const h = btn.offsetHeight || 44;
+  return {
+    x: 16 + Math.random() * (window.innerWidth  - w - 32),
+    y: 16 + Math.random() * (window.innerHeight - h - 32),
+  };
+}
+
+function flee(cursorX, cursorY) {
+  const bRect = btn.getBoundingClientRect();
+  const bCX = bRect.left + bRect.width  / 2;
+  const bCY = bRect.top  + bRect.height / 2;
+  const dist = Math.hypot(cursorX - bCX, cursorY - bCY);
+  const FLEE_RADIUS = 90;
+
+  if (dist < FLEE_RADIUS) {
+    noAttempts++;
+    if (noAttempts >= 4) {
+      showToast("Give it up already, I promise to make it worthwhile 😏💕", 5000);
+    }
+    // Move opposite direction from cursor
+    const angle = Math.atan2(bCY - cursorY, bCX - cursorX);
+    const push  = FLEE_RADIUS + 60;
+    let newX = bCX + Math.cos(angle) * push - bRect.width  / 2;
+    let newY = bCY + Math.sin(angle) * push - bRect.height / 2;
+    // Clamp to viewport
+    newX = Math.max(8, Math.min(window.innerWidth  - bRect.width  - 8, newX));
+    newY = Math.max(8, Math.min(window.innerHeight - bRect.height - 8, newY));
+    btn.style.left = newX + 'px';
+    btn.style.top  = newY + 'px';
+  }
+}
+
+// Mouse proximity flee
+document.addEventListener('mousemove', e => {
+  if (document.getElementById('screen-question').classList.contains('active')) {
+    flee(e.clientX, e.clientY);
+  }
+});
+
+// Touch — flee on touchstart/touchmove
+function handleTouch(e) {
+  if (!document.getElementById('screen-question').classList.contains('active')) return;
+  const t = e.touches[0];
+  flee(t.clientX, t.clientY);
+}
+document.addEventListener('touchstart', handleTouch, { passive: true });
+document.addEventListener('touchmove',  handleTouch, { passive: true });
+
+function noClick() {
+  noAttempts++;
+  if (noAttempts >= 4) {
+    showToast("Give it up already, I promise to make it worthwhile 😏💕", 5000);
+  }
+  const p = getRandomPos();
+  btn.style.left = p.x + 'px';
+  btn.style.top  = p.y + 'px';
+}
+
+// ── YES ───────────────────────────────────────────────────
+function sayYes() {
+  dismissToast();
+  switchScreen('screen-yes');
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('dateInput').min = today;
+}
+
+// ── STEPS ─────────────────────────────────────────────────
+let currentStep = 0;
+function nextStep(target) {
+  if (target === 1) {
+    const d = document.getElementById('dateInput').value;
+    const t = document.getElementById('timeInput').value;
+    if (!d || !t) { showToast('Please pick a date and time 🗓️'); return; }
+  }
+  if (target === 2) {
+    if (selectedFoods.size === 0) { showToast('Pick at least one thing you fancy 😊'); return; }
+    buildFinalMessage();
+  }
+
+  document.getElementById(`step-${currentStep}`).classList.remove('active');
+  document.getElementById(`dot-${currentStep}`).classList.remove('active');
+  currentStep = target;
+  document.getElementById(`step-${currentStep}`).classList.add('active');
+  document.getElementById(`dot-${currentStep}`).classList.add('active');
+}
+
+function buildFinalMessage() {
+  const rawDate = document.getElementById('dateInput').value;
+  const time    = document.getElementById('timeInput').value;
+  const dateStr = new Date(rawDate + 'T00:00').toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+  const [h, m]  = time.split(':');
+  const hNum    = parseInt(h);
+  const hr12    = ((hNum % 12) || 12) + ':' + m + (hNum >= 12 ? ' PM' : ' AM');
+  const foods   = [...selectedFoods].join(', ');
+
+  document.getElementById('finalDetail').innerHTML =
+    `Be ready by <strong>${dateStr}</strong> at <strong>${hr12}</strong>.<br>
+     We'll have: <strong>${foods}</strong>.<br><br>
+     Super excited — can't wait to see you! 🥂✨`;
+}
+
+async function submitResponse() {
+  const rawDate = document.getElementById('dateInput').value;
+  const time    = document.getElementById('timeInput').value;
+  const dateStr = new Date(rawDate + 'T00:00').toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+  const [h, m]  = time.split(':');
+  const hNum    = parseInt(h);
+  const hr12    = ((hNum % 12) || 12) + ':' + m + (hNum >= 12 ? ' PM' : ' AM');
+  const foods   = [...selectedFoods].join(', ');
+
+  // Save locally
+  localStorage.setItem('dateResponse', JSON.stringify({ date: dateStr, time: hr12, food: foods, submitted: true, submittedAt: new Date().toLocaleString() }));
+
+  // POST to Formspree
+  try {
+    await fetch('https://formspree.io/f/xdavkjnw', {
+      method: 'POST',
+      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        'She said': '💕 YES!',
+        'Date': dateStr,
+        'Time': hr12,
+        'Food preferences': foods,
+        'Submitted at': new Date().toLocaleString(),
+      })
+    });
+  } catch(e) {
+    // Fail silently — don't ruin the moment
+  }
+
+  switchScreen('screen-done');
+  launchConfetti();
+}
+
+// ── OWNER PANEL ───────────────────────────────────────────
+function openOwner() {
+  const panel = document.getElementById('owner-panel');
+  const content = document.getElementById('responseContent');
+  const raw = localStorage.getItem('dateResponse');
+  if (!raw) {
+    content.innerHTML = '<p class="no-responses">No response yet. Share the link and wait! 💌</p>';
+  } else {
+    const d = JSON.parse(raw);
+    content.innerHTML = `
+      <div class="response-block">
+        <strong>Said Yes!</strong> 🎉<br>
+        📅 Date: <strong>${d.date}</strong><br>
+        ⏰ Time: <strong>${d.time}</strong><br>
+        🍽️ Wants: <strong>${d.food || '—'}</strong><br>
+        ${d.submittedAt ? `✅ Submitted: ${d.submittedAt}` : '⏳ Viewing but not submitted yet'}
+      </div>`;
+  }
+  panel.classList.add('show');
+}
+function closeOwner() { document.getElementById('owner-panel').classList.remove('show'); }
+
+// ── HELPERS ───────────────────────────────────────────────
+function switchScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function launchConfetti() {
+  const bg = document.getElementById('heartsBg');
+  const extras = ['🎊','🎉','💖','🌟','🥂'];
+  for (let i = 0; i < 18; i++) {
+    const el = document.createElement('span');
+    el.className = 'heart-particle';
+    el.textContent = extras[Math.floor(Math.random() * extras.length)];
+    el.style.left = Math.random() * 100 + 'vw';
+    el.style.animationDuration = (4 + Math.random() * 5) + 's';
+    el.style.animationDelay = (Math.random() * 2) + 's';
+    el.style.fontSize = (1.2 + Math.random() * 1.8) + 'rem';
+    el.style.opacity = 0.7;
+    bg.appendChild(el);
+    setTimeout(() => el.remove(), 9000);
+  }
+}
+</script>
+</body>
+</html>
